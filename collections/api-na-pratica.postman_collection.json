@@ -1,0 +1,60 @@
+{
+  "info": {
+    "name": "API na prática",
+    "description": "Coleção do curso Testes de API na prática (Avant QA's). Uma pasta por aula. Use com o ambiente 'API na prática — local' e a ServeRest rodando.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Aula 03 — Laboratório",
+      "description": "Primeiras requisições: listar usuários, fazer login e listar produtos.",
+      "item": [
+        {
+          "name": "Listar usuários",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar produtos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": ["{{baseUrl}}"],
+              "path": ["produtos"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
