@@ -354,6 +354,119 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Aula 12 — Contrato (JSON Schema)",
+      "description": "Uma asserção que verifica a forma inteira da resposta.",
+      "item": [
+        {
+          "name": "Login — contrato da resposta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const schema = {",
+                  "  type: \"object\",",
+                  "  required: [\"message\", \"authorization\"],",
+                  "  properties: {",
+                  "    message:       { type: \"string\" },",
+                  "    authorization: { type: \"string\", pattern: \"^Bearer \" }",
+                  "  },",
+                  "  additionalProperties: false      // campo novo na resposta = falha (proposital)",
+                  "};",
+                  "",
+                  "pm.test(\"status é 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"resposta cumpre o contrato\", () => pm.response.to.have.jsonSchema(schema));",
+                  "",
+                  "pm.environment.set(\"token\", pm.response.json().authorization.replace(/^Bearer /, \"\"));",
+                  "pm.environment.set(\"tokenValidoAte\", Date.now() + 9 * 60 * 1000);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar produtos — contrato da lista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const schema = {",
+                  "  type: \"object\",",
+                  "  required: [\"quantidade\", \"produtos\"],",
+                  "  properties: {",
+                  "    quantidade: { type: \"integer\", minimum: 0 },",
+                  "    produtos: {",
+                  "      type: \"array\",",
+                  "      items: {",
+                  "        type: \"object\",",
+                  "        required: [\"nome\", \"preco\", \"descricao\", \"quantidade\", \"_id\"],",
+                  "        properties: {",
+                  "          nome:       { type: \"string\", minLength: 1 },",
+                  "          preco:      { type: \"number\", minimum: 0 },   // tipo E faixa",
+                  "          descricao:  { type: \"string\" },",
+                  "          quantidade: { type: \"integer\", minimum: 0 },",
+                  "          _id:        { type: \"string\" }",
+                  "        },",
+                  "        additionalProperties: false",
+                  "      }",
+                  "    }",
+                  "  },",
+                  "  additionalProperties: false",
+                  "};",
+                  "",
+                  "pm.test(\"status é 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"a lista cumpre o contrato\", () => pm.response.to.have.jsonSchema(schema));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {

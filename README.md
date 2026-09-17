@@ -80,5 +80,6 @@ A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir 
 | 03 — Montando o laboratório | coleção inicial, ambientes local e online |
 | 10 — Token dinâmico | login que guarda o token, autorização no nível da coleção e login automático antes de cada requisição |
 | 11 — Asserções | asserção frágil × forte, e verificações de status, corpo, cabeçalho e tempo |
+| 12 — Contrato (JSON Schema) | schema do login e da listagem, com tipos, obrigatórios e campo a mais barrado |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.
