@@ -161,6 +161,199 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Aula 11 — Asserções",
+      "description": "Asserção fraca x forte, e as cinco camadas: status, corpo, cabeçalhos, tempo e efeito.",
+      "item": [
+        {
+          "name": "FRÁGIL — passa sempre (nao imite)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Esta \"asserção\" não verifica nada: sem expect, o teste passa sempre.",
+                  "pm.test(\"resposta do login\", () => {",
+                  "  pm.response.json();          // só lê o corpo... e não compara com nada",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FORTE — login verificado de verdade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 1) status",
+                  "pm.test(\"status é 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "// 2) corpo: campo existe, tipo e valor",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem de sucesso\", () => pm.expect(corpo.message).to.eql(\"Login realizado com sucesso\"));",
+                  "pm.test(\"authorization é texto e começa com Bearer\", () => {",
+                  "  pm.expect(corpo.authorization).to.be.a(\"string\");",
+                  "  pm.expect(corpo.authorization).to.match(/^Bearer /);",
+                  "});",
+                  "",
+                  "// 3) cabeçalho",
+                  "pm.test(\"responde JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\"));",
+                  "",
+                  "// guarda o token para as próximas requisições (aula 10)",
+                  "pm.environment.set(\"token\", corpo.authorization.replace(/^Bearer /, \"\"));",
+                  "pm.environment.set(\"tokenValidoAte\", Date.now() + 9 * 60 * 1000);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar produtos — lista, tipos e tempo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status é 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"quantidade bate com o tamanho da lista\", () => {",
+                  "  pm.expect(corpo.quantidade).to.eql(corpo.produtos.length);",
+                  "});",
+                  "",
+                  "pm.test(\"todo produto tem nome, preço numérico e _id\", () => {",
+                  "  corpo.produtos.forEach(produto => {",
+                  "    pm.expect(produto.nome, \"nome\").to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(produto.preco, \"preco\").to.be.a(\"number\");",
+                  "    pm.expect(produto._id, \"_id\").to.be.a(\"string\");",
+                  "  });",
+                  "});",
+                  "",
+                  "// tempo: use com parcimônia em teste funcional (aula 19)",
+                  "pm.test(\"respondeu em menos de 2 segundos\", () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastro sem e-mail — erro verificado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+                  "",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"aponta o campo que faltou\", () => pm.expect(corpo).to.have.property(\"email\"));",
+                  "pm.test(\"não vaza rastro de erro\", () => pm.expect(JSON.stringify(corpo)).to.not.include(\"at Object\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Sem email\",\n  \"password\": \"123456\",\n  \"administrador\": \"false\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
