@@ -16,8 +16,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/usuarios",
-              "host": ["{{baseUrl}}"],
-              "path": ["usuarios"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
             }
           },
           "response": []
@@ -27,7 +31,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -35,8 +42,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
             }
           },
           "response": []
@@ -48,13 +59,150 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/produtos",
-              "host": ["{{baseUrl}}"],
-              "path": ["produtos"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
             }
           },
           "response": []
         }
       ]
+    },
+    {
+      "name": "Aula 10 — Token dinâmico",
+      "description": "Login guardando o token e rota autenticada usando a autorização da coleção.",
+      "item": [
+        {
+          "name": "Login (guarda o token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login respondeu 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"veio o campo authorization\", () => pm.expect(corpo).to.have.property(\"authorization\"));",
+                  "",
+                  "const token = corpo.authorization.replace(/^Bearer /, \"\");",
+                  "pm.environment.set(\"token\", token);",
+                  "pm.environment.set(\"tokenValidoAte\", Date.now() + 9 * 60 * 1000);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar produto (usa o token da coleção)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"produto criado\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"mensagem de sucesso\", () => pm.expect(pm.response.json().message).to.eql(\"Cadastro realizado com sucesso\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto {{$randomInt}}\",\n  \"preco\": 49,\n  \"descricao\": \"Produto da aula 10\",\n  \"quantidade\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Login automatico: so roda se nao houver token valido guardado",
+          "const agora = Date.now();",
+          "const validade = Number(pm.environment.get(\"tokenValidoAte\")) || 0;",
+          "",
+          "if (!pm.environment.get(\"token\") || agora > validade) {",
+          "  pm.sendRequest({",
+          "    url: pm.environment.get(\"baseUrl\") + \"/login\",",
+          "    method: \"POST\",",
+          "    header: { \"Content-Type\": \"application/json\" },",
+          "    body: { mode: \"raw\", raw: JSON.stringify({",
+          "      email: pm.environment.get(\"email\"),",
+          "      password: pm.environment.get(\"senha\")",
+          "    }) }",
+          "  }, (erro, resposta) => {",
+          "    if (erro || resposta.code !== 200) {",
+          "      throw new Error(\"Login falhou: \" + (erro || resposta.code));  // falha alto, nao em silencio",
+          "    }",
+          "    const token = resposta.json().authorization.replace(/^Bearer /, \"\");",
+          "    pm.environment.set(\"token\", token);",
+          "    pm.environment.set(\"tokenValidoAte\", agora + 9 * 60 * 1000);  // 9 min (token dura 10)",
+          "  });",
+          "}"
+        ]
+      }
     }
   ]
 }

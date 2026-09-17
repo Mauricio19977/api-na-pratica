@@ -63,10 +63,21 @@ environments/   ambientes: local (sua máquina) e online (serverest.dev)
 
 A versão online é compartilhada por todo mundo. Não cadastre dados reais e não use essa versão para testes destrutivos.
 
+## Rodando pela linha de comando (Newman)
+
+Com a ServeRest no ar:
+
+```bash
+npx newman run collections/api-na-pratica.postman_collection.json -e environments/local.postman_environment.json
+```
+
+A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir se está tudo certo.
+
 ## Andamento
 
 | Aula | O que entra no repositório |
 |---|---|
 | 03 — Montando o laboratório | coleção inicial, ambientes local e online |
+| 10 — Token dinâmico | login que guarda o token, autorização no nível da coleção e login automático antes de cada requisição |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.
