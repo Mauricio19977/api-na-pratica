@@ -82,5 +82,6 @@ A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir 
 | 11 — Asserções | asserção frágil × forte, e verificações de status, corpo, cabeçalho e tempo |
 | 12 — Contrato (JSON Schema) | schema do login e da listagem, com tipos, obrigatórios e campo a mais barrado |
 | 13 — Fluxo encadeado e estado | o ciclo criar, consultar, editar, apagar e conferir, com o id passando entre as requisições e limpeza no fim |
+| 14 — Dados dinâmicos | dado único por execução, a armadilha do mesmo gerador escrito duas vezes e a receita prefixo + carimbo + aleatório |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.
