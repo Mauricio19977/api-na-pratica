@@ -1042,6 +1042,462 @@
      "response": []
     }
    ]
+  },
+  {
+   "name": "Aula 16 — Regra de negócio",
+   "description": "Estoque, carrinho e compra: o que a API precisa garantir mesmo quando a tela não pede — e a porta dos fundos, onde a regra não está.",
+   "item": [
+    {
+     "name": "0. Prepara o laboratório (cliente A sem carrinho)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Um carrinho aberto de execução anterior faria tudo falhar (aula 13).",
+         "pm.test(\"cliente A começa sem carrinho\", () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos/cancelar-compra",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos",
+        "cancelar-compra"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "1. Cria o cliente B",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.collectionVariables.set(\"emailB\", `qa_b_${Date.now()}_${Math.random().toString(36).slice(2, 7)}@teste.com`);"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"cliente B criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"idUsuarioB\", pm.response.json()._id);",
+         "",
+         "pm.sendRequest({",
+         "  url: pm.environment.get(\"baseUrl\") + \"/login\",",
+         "  method: \"POST\",",
+         "  header: { \"Content-Type\": \"application/json\" },",
+         "  body: { mode: \"raw\", raw: JSON.stringify({ email: pm.collectionVariables.get(\"emailB\"), password: \"teste\" }) }",
+         "}, (erro, resposta) => {",
+         "  pm.test(\"cliente B tem token\", () => pm.expect(resposta.code).to.eql(200));",
+         "  pm.collectionVariables.set(\"tokenB\", resposta.json().authorization);",
+         "});"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Cliente B\",\n  \"email\": \"{{emailB}}\",\n  \"password\": \"teste\",\n  \"administrador\": \"false\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "2. Produto com UMA unidade em estoque",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.collectionVariables.set(\"nomeProduto\", `Ultimo item qa_${Date.now()}`);"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"produto criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"idProduto\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"{{nomeProduto}}\",\n  \"preco\": 100,\n  \"descricao\": \"o único que sobrou\",\n  \"quantidade\": 1\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "3. Cliente A reserva a última unidade",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"reserva aceita\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"carrinhoA\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProduto}}\", \"quantidade\": 1 } ]\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "4. A regra apareceu: o estoque zerou",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// A API baixa o estoque na RESERVA, não só na compra concluída.",
+         "pm.test(\"estoque foi para zero\", () => pm.expect(pm.response.json().quantidade).to.eql(0));",
+         "pm.test(\"estoque nunca fica negativo\", () => pm.expect(pm.response.json().quantidade).to.be.at.least(0));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos/{{idProduto}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos",
+        "{{idProduto}}"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "5. Cliente B tenta o mesmo item",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"a venda a mais é recusada\", () => pm.response.to.have.status(400));",
+         "pm.test(\"a recusa explica o motivo\", () =>",
+         "  pm.expect(pm.response.json().message).to.eql(\"Produto não possui quantidade suficiente\"));",
+         "pm.test(\"e mostra o estoque no momento da recusa\", () =>",
+         "  pm.expect(pm.response.json().item.quantidadeEstoque).to.eql(0));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Authorization",
+        "value": "{{tokenB}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProduto}}\", \"quantidade\": 1 } ]\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "6. A PORTA DOS FUNDOS — editar o produto repõe o reservado",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"a edição é aceita\", () => pm.response.to.have.status(200));",
+         "",
+         "const base = pm.environment.get(\"baseUrl\");",
+         "",
+         "pm.sendRequest(base + \"/carrinhos/\" + pm.collectionVariables.get(\"carrinhoA\"), (e, r) => {",
+         "  pm.test(\"o cliente A continua com a unidade reservada\", () =>",
+         "    pm.expect(r.json().quantidadeTotal).to.eql(1));",
+         "});",
+         "",
+         "pm.sendRequest(base + \"/produtos/\" + pm.collectionVariables.get(\"idProduto\"), (e, r) => {",
+         "  pm.test(\"e o estoque voltou a 1 sem nada ter sido devolvido\", () =>",
+         "    pm.expect(r.json().quantidade).to.eql(1));",
+         "});"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"{{nomeProduto}}\",\n  \"preco\": 100,\n  \"descricao\": \"reposto por fora\",\n  \"quantidade\": 1\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/produtos/{{idProduto}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos",
+        "{{idProduto}}"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "7. E agora o cliente B leva a MESMA unidade",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// A regra estava no caminho da compra. Não estava no caminho da edição.",
+         "pm.test(\"a segunda reserva da mesma unidade é aceita\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"carrinhoB\", pm.response.json()._id);",
+         "",
+         "pm.sendRequest(pm.environment.get(\"baseUrl\") + \"/produtos/\" + pm.collectionVariables.get(\"idProduto\"), (e, r) => {",
+         "  pm.test(\"estoque zerado de novo — duas reservas para uma unidade\", () =>",
+         "    pm.expect(r.json().quantidade).to.eql(0));",
+         "});"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Authorization",
+        "value": "{{tokenB}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"produtos\": [ { \"idProduto\": \"{{idProduto}}\", \"quantidade\": 1 } ]\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "8. O 200 que não concluiu nada",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"a compra do cliente A é concluída\", () => pm.response.to.have.status(200));",
+         "pm.test(\"e diz que excluiu o carrinho\", () =>",
+         "  pm.expect(pm.response.json().message).to.eql(\"Registro excluído com sucesso\"));",
+         "",
+         "// Agora o mesmo endpoint, SEM carrinho nenhum:",
+         "pm.sendRequest({",
+         "  url: pm.environment.get(\"baseUrl\") + \"/carrinhos/concluir-compra\",",
+         "  method: \"DELETE\",",
+         "  header: { Authorization: \"Bearer \" + pm.environment.get(\"token\") }",
+         "}, (erro, r) => {",
+         "  pm.test(\"concluir sem carrinho TAMBÉM devolve 200\", () => pm.expect(r.code).to.eql(200));",
+         "  pm.test(\"só a mensagem denuncia que nada aconteceu\", () =>",
+         "    pm.expect(r.json().message).to.eql(\"Não foi encontrado carrinho para esse usuário\"));",
+         "});"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos/concluir-compra",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos",
+        "concluir-compra"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "9. Limpeza",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"carrinho do cliente B cancelado\", () =>",
+         "  pm.expect(pm.response.json().message).to.include(\"excluído com sucesso\"));",
+         "",
+         "const base = pm.environment.get(\"baseUrl\");",
+         "const admin = { Authorization: \"Bearer \" + pm.environment.get(\"token\") };",
+         "",
+         "pm.sendRequest({ url: base + \"/produtos/\" + pm.collectionVariables.get(\"idProduto\"), method: \"DELETE\", header: admin },",
+         "  (e, r) => pm.test(\"produto apagado\", () => pm.expect(r.json().message).to.eql(\"Registro excluído com sucesso\")));",
+         "",
+         "pm.sendRequest({ url: base + \"/usuarios/\" + pm.collectionVariables.get(\"idUsuarioB\"), method: \"DELETE\" },",
+         "  (e, r) => pm.test(\"cliente B apagado\", () => pm.expect(r.json().message).to.eql(\"Registro excluído com sucesso\")));",
+         "",
+         "[\"idProduto\", \"nomeProduto\", \"carrinhoA\", \"carrinhoB\", \"tokenB\", \"emailB\", \"idUsuarioB\"]",
+         "  .forEach((v) => pm.collectionVariables.unset(v));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "{{tokenB}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos/cancelar-compra",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos",
+        "cancelar-compra"
+       ]
+      }
+     },
+     "response": []
+    }
+   ]
   }
  ],
  "auth": {

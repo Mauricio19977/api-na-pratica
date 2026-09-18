@@ -91,5 +91,6 @@ A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir 
 | 13 — Fluxo encadeado e estado | o ciclo criar, consultar, editar, apagar e conferir, com o id passando entre as requisições e limpeza no fim |
 | 14 — Dados dinâmicos | dado único por execução, a armadilha do mesmo gerador escrito duas vezes e a receita prefixo + carimbo + aleatório |
 | 15 — Data-driven | uma requisição e um arquivo de casos (`data/`), com o esperado em cada linha |
+| 16 — Regra de negócio | estoque, reserva e a porta dos fundos: a mesma unidade vendida duas vezes |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.
