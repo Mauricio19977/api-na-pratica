@@ -93,5 +93,6 @@ A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir 
 | 15 — Data-driven | uma requisição e um arquivo de casos (`data/`), com o esperado em cada linha |
 | 16 — Regra de negócio | estoque, reserva e a porta dos fundos: a mesma unidade vendida duas vezes |
 | 17 — Listas e filtros | acento no filtro, filtro vazio, ordem sem garantia e a ausência de paginação |
+| 18 — Contrato de erro | os quatro formatos de erro da mesma API, a mensagem que engana, a que vaza e a que conta quem existe |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.

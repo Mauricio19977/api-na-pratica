@@ -2038,6 +2038,468 @@
      "response": []
     }
    ]
+  },
+  {
+   "name": "Aula 18 — Contrato de erro",
+   "description": "Quatro formatos de erro na mesma API, mensagem que vaza detalhe interno, mensagem que engana — e o cadastro que conta o que o login se recusa a contar.",
+   "item": [
+    {
+     "name": "0. Preparo — cria o usuário que vai existir",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.collectionVariables.set(\"emailAlvo\", `qa_alvo_${Date.now()}@teste.com`);"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"usuário criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"idAlvo\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Alvo da aula 18\",\n  \"email\": \"{{emailAlvo}}\",\n  \"password\": \"teste\",\n  \"administrador\": \"false\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "1. Formato A — a chave do erro é o nome do campo",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+         "const corpo = pm.response.json();",
+         "",
+         "pm.test(\"NÃO existe 'message' aqui\", () => pm.expect(corpo).to.not.have.property(\"message\"));",
+         "pm.test(\"a chave é o próprio campo\", () => pm.expect(corpo).to.have.property(\"nome\"));",
+         "",
+         "pm.collectionVariables.set(\"formatoA\", Object.keys(corpo).join(\",\"));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"\",\n  \"email\": \"qa_a@teste.com\",\n  \"password\": \"teste\",\n  \"administrador\": \"true\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "2. Formato B — agora a chave é 'message'",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+         "const corpo = pm.response.json();",
+         "",
+         "pm.test(\"aqui existe 'message'\", () => pm.expect(corpo).to.have.property(\"message\"));",
+         "pm.test(\"e o formato é DIFERENTE do erro anterior\", () =>",
+         "  pm.expect(Object.keys(corpo).join(\",\")).to.not.eql(pm.collectionVariables.get(\"formatoA\")));",
+         "",
+         "// Mesma API, mesmo endpoint, mesmo status: dois formatos de erro."
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Repetido\",\n  \"email\": \"{{emailAlvo}}\",\n  \"password\": \"teste\",\n  \"administrador\": \"false\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "3. Formato C — duas mensagens para um erro só",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+         "const corpo = pm.response.json();",
+         "",
+         "pm.test(\"um único campo errado gerou DUAS mensagens\", () =>",
+         "  pm.expect(Object.keys(corpo).length).to.eql(2));",
+         "pm.test(\"e uma delas traz o caminho com índice\", () =>",
+         "  pm.expect(corpo).to.have.property(\"produtos[0].quantidade\"));",
+         "",
+         "console.log(\"formato C →\", JSON.stringify(corpo));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"produtos\": [ { \"idProduto\": \"aaaaaaaaaaaaaaaa\", \"quantidade\": 0 } ]\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/carrinhos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "carrinhos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "4. A mensagem que ENGANA (content-type errado)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const corpo = pm.response.json();",
+         "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+         "",
+         "// O corpo FOI enviado, completo. Mas, sem o content-type certo,",
+         "// o servidor não o interpretou — e acusa campo obrigatório ausente.",
+         "pm.test(\"diz que o nome é obrigatório, mesmo tendo sido enviado\", () =>",
+         "  pm.expect(corpo.nome).to.eql(\"nome é obrigatório\"));",
+         "pm.test(\"não é 415 (tipo de mídia não suportado), é 400\", () =>",
+         "  pm.expect(pm.response.code).to.not.eql(415));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "text/plain"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Fulano\",\n  \"email\": \"qa_d@teste.com\",\n  \"password\": \"teste\",\n  \"administrador\": \"true\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "5. A mensagem que VAZA detalhe interno",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const corpo = pm.response.json();",
+         "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+         "",
+         "// A mensagem manda o cliente ler uma issue do repositório do produto.",
+         "pm.test(\"a mensagem entrega o repositório de quem fez a API\", () =>",
+         "  pm.expect(corpo.message).to.include(\"github.com\"));",
+         "",
+         "console.log(\"mensagem →\", corpo.message);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{nome:"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "6. Enumeração — o login se comporta bem",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const comEmailReal = pm.response.json().message;",
+         "pm.test(\"senha errada dá 401\", () => pm.response.to.have.status(401));",
+         "",
+         "pm.sendRequest({",
+         "  url: pm.environment.get(\"baseUrl\") + \"/login\",",
+         "  method: \"POST\",",
+         "  header: { \"Content-Type\": \"application/json\" },",
+         "  body: { mode: \"raw\", raw: JSON.stringify({ email: `nao_existe_${Date.now()}@teste.com`, password: \"teste\" }) }",
+         "}, (e, r) => {",
+         "  pm.test(\"e-mail inexistente dá o MESMO 401\", () => pm.expect(r.code).to.eql(401));",
+         "  pm.test(\"com a MESMA mensagem — o login não conta quem existe\", () =>",
+         "    pm.expect(r.json().message).to.eql(comEmailReal));",
+         "});"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"email\": \"{{emailAlvo}}\",\n  \"password\": \"senha errada de proposito\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/login",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "login"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "7. ...mas o CADASTRO conta",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"status é 400\", () => pm.response.to.have.status(400));",
+         "pm.test(\"o cadastro confirma que aquele e-mail existe\", () =>",
+         "  pm.expect(pm.response.json().message).to.eql(\"Este email já está sendo usado\"));",
+         "",
+         "// A porta da frente está trancada. A janela dos fundos está aberta."
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Sondando\",\n  \"email\": \"{{emailAlvo}}\",\n  \"password\": \"teste\",\n  \"administrador\": \"false\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "8. ...e a busca entrega tudo, sem token",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const corpo = pm.response.json();",
+         "pm.test(\"status é 200 — sem token nenhum\", () => pm.response.to.have.status(200));",
+         "pm.test(\"encontrou o usuário pelo e-mail\", () => pm.expect(corpo.quantidade).to.eql(1));",
+         "pm.test(\"e devolve a SENHA em texto puro\", () =>",
+         "  pm.expect(corpo.usuarios[0]).to.have.property(\"password\"));",
+         "",
+         "// Não adianta o login ser discreto se a lista conta tudo."
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/usuarios?email={{emailAlvo}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ],
+       "query": [
+        {
+         "key": "email",
+         "value": "{{emailAlvo}}"
+        }
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "9. Limpeza",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"usuário-alvo apagado\", () =>",
+         "  pm.expect(pm.response.json().message).to.eql(\"Registro excluído com sucesso\"));",
+         "[\"emailAlvo\", \"idAlvo\", \"formatoA\"].forEach(v => pm.collectionVariables.unset(v));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/usuarios/{{idAlvo}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios",
+        "{{idAlvo}}"
+       ]
+      }
+     },
+     "response": []
+    }
+   ]
   }
  ],
  "auth": {
