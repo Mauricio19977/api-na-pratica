@@ -52,6 +52,13 @@ Os dados ficam só enquanto a API está rodando. Parou e subiu de novo, volta ao
 ```text
 collections/    coleção do Postman, com uma pasta por aula
 environments/   ambientes: local (sua máquina) e online (serverest.dev)
+data/           tabelas de casos do data-driven (CSV e JSON)
+```
+
+Para rodar uma pasta com tabela de casos:
+
+```bash
+npx newman run collections/api-na-pratica.postman_collection.json   -e environments/local.postman_environment.json   --folder "Aula 15 — Data-driven" -d data/usuarios-cadastro.csv
 ```
 
 ## Ambientes
@@ -83,5 +90,6 @@ A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir 
 | 12 — Contrato (JSON Schema) | schema do login e da listagem, com tipos, obrigatórios e campo a mais barrado |
 | 13 — Fluxo encadeado e estado | o ciclo criar, consultar, editar, apagar e conferir, com o id passando entre as requisições e limpeza no fim |
 | 14 — Dados dinâmicos | dado único por execução, a armadilha do mesmo gerador escrito duas vezes e a receita prefixo + carimbo + aleatório |
+| 15 — Data-driven | uma requisição e um arquivo de casos (`data/`), com o esperado em cada linha |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.

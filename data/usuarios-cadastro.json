@@ -1,0 +1,7 @@
+[
+  { "caso": "cadastro valido",        "nome": "Sirlene do JSON", "email": "AUTO",         "password": "teste", "administrador": "true",   "statusEsperado": 201, "campoResposta": "message",       "mensagemEsperada": "Cadastro realizado com sucesso" },
+  { "caso": "nome em branco",         "nome": "",                "email": "j1@qa.com",    "password": "teste", "administrador": "true",   "statusEsperado": 400, "campoResposta": "nome",          "mensagemEsperada": "nome não pode ficar em branco" },
+  { "caso": "email sem arroba",       "nome": "Fulano",          "email": "semarroba",    "password": "teste", "administrador": "true",   "statusEsperado": 400, "campoResposta": "email",         "mensagemEsperada": "email deve ser um email válido" },
+  { "caso": "senha em branco",        "nome": "Fulano",          "email": "j2@qa.com",    "password": "",      "administrador": "true",   "statusEsperado": 400, "campoResposta": "password",      "mensagemEsperada": "password não pode ficar em branco" },
+  { "caso": "administrador invalido", "nome": "Fulano",          "email": "j3@qa.com",    "password": "teste", "administrador": "talvez", "statusEsperado": 400, "campoResposta": "administrador", "mensagemEsperada": "administrador deve ser 'true' ou 'false'" }
+]

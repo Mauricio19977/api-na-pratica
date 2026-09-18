@@ -1,0 +1,8 @@
+caso,nome,email,password,administrador,statusEsperado,campoResposta,mensagemEsperada
+cadastro valido,Sirlene do CSV,AUTO,teste,true,201,message,Cadastro realizado com sucesso
+nome em branco,,auto1@qa.com,teste,true,400,nome,nome não pode ficar em branco
+email sem arroba,Fulano,semarroba,teste,true,400,email,email deve ser um email válido
+email com espaço,Fulano,"a b@qa.com",teste,true,400,email,email deve ser um email válido
+senha em branco,Fulano,auto2@qa.com,,true,400,password,password não pode ficar em branco
+administrador invalido,Fulano,auto3@qa.com,teste,talvez,400,administrador,administrador deve ser 'true' ou 'false'
+email dinamico no csv,Fulano,{{$randomEmail}},teste,false,201,message,Cadastro realizado com sucesso

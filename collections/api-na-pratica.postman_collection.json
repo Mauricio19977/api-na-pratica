@@ -962,6 +962,86 @@
      "response": []
     }
    ]
+  },
+  {
+   "name": "Aula 15 — Data-driven",
+   "description": "Uma requisição só, um arquivo de casos. Rode com: newman run ... --folder \"Aula 15 — Data-driven\" -d data/usuarios-cadastro.csv",
+   "item": [
+    {
+     "name": "Cadastro — um caso por linha",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// AUTO na planilha = \"gera um e-mail único para mim\" (aula 14).",
+         "let email = pm.iterationData.get(\"email\");",
+         "if (email === \"AUTO\") {",
+         "  email = `qa_${Date.now()}_${Math.random().toString(36).slice(2, 7)}@teste.com`;",
+         "}",
+         "pm.variables.set(\"emailDoCaso\", email);",
+         "",
+         "console.log(`caso ${pm.info.iteration + 1}: ${pm.iterationData.get(\"caso\")} | email: ${email}`);"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const caso     = pm.iterationData.get(\"caso\");",
+         "const esperado = Number(pm.iterationData.get(\"statusEsperado\")); // CSV entrega TEXTO",
+         "const campo    = pm.iterationData.get(\"campoResposta\");",
+         "const mensagem = pm.iterationData.get(\"mensagemEsperada\");",
+         "",
+         "// O nome do teste carrega o caso: sem isso, 7 falhas viram 7 linhas iguais.",
+         "pm.test(`[${caso}] status ${esperado}`, () =>",
+         "  pm.expect(pm.response.code).to.eql(esperado));",
+         "",
+         "pm.test(`[${caso}] resposta: ${campo}`, () =>",
+         "  pm.expect(pm.response.json()[campo]).to.eql(mensagem));",
+         "",
+         "// Limpeza imediata do que este caso criou (aula 13).",
+         "if (pm.response.code === 201) {",
+         "  pm.sendRequest({",
+         "    url: pm.environment.get(\"baseUrl\") + \"/usuarios/\" + pm.response.json()._id,",
+         "    method: \"DELETE\"",
+         "  }, () => {});",
+         "}"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"{{nome}}\",\n  \"email\": \"{{emailDoCaso}}\",\n  \"password\": \"{{password}}\",\n  \"administrador\": \"{{administrador}}\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/usuarios",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "usuarios"
+       ]
+      }
+     },
+     "response": []
+    }
+   ]
   }
  ],
  "auth": {
