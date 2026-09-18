@@ -92,5 +92,6 @@ A partir da Aula 22 o curso usa isso no dia a dia; aqui já serve para conferir 
 | 14 — Dados dinâmicos | dado único por execução, a armadilha do mesmo gerador escrito duas vezes e a receita prefixo + carimbo + aleatório |
 | 15 — Data-driven | uma requisição e um arquivo de casos (`data/`), com o esperado em cada linha |
 | 16 — Regra de negócio | estoque, reserva e a porta dos fundos: a mesma unidade vendida duas vezes |
+| 17 — Listas e filtros | acento no filtro, filtro vazio, ordem sem garantia e a ausência de paginação |
 
 As próximas aulas acrescentam pastas na coleção, schemas e o workflow do GitHub Actions.

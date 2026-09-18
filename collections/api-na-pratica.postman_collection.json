@@ -1498,6 +1498,546 @@
      "response": []
     }
    ]
+  },
+  {
+   "name": "Aula 17 — Listas e filtros",
+   "description": "O que só aparece com volume: filtro que não ignora acento, filtro vazio que não filtra, ordem sem garantia e ausência de paginação.",
+   "item": [
+    {
+     "name": "0. Preparo — sufixo desta execução",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.collectionVariables.set(\"sufixo\", `qa${Date.now().toString().slice(-6)}`);"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"laboratório no ar\", () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "0. Preparo — Café",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"produto criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"id_Caf\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Café {{sufixo}}\",\n  \"preco\": 10,\n  \"descricao\": \"lote da aula 17\",\n  \"quantidade\": 3\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "0. Preparo — cafe",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"produto criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"id_cafe\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"cafe {{sufixo}}\",\n  \"preco\": 10,\n  \"descricao\": \"lote da aula 17\",\n  \"quantidade\": 3\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "0. Preparo — CAFÉ",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"produto criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"id_CAF\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"CAFÉ {{sufixo}}\",\n  \"preco\": 10,\n  \"descricao\": \"lote da aula 17\",\n  \"quantidade\": 3\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "0. Preparo — Cafeteira",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"produto criado\", () => pm.response.to.have.status(201));",
+         "pm.collectionVariables.set(\"id_Cafeteira\", pm.response.json()._id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nome\": \"Cafeteira {{sufixo}}\",\n  \"preco\": 20,\n  \"descricao\": \"lote da aula 17\",\n  \"quantidade\": 3\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "1. Filtro com acento encontra 2 (o acento importa)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const r = pm.response.json();",
+         "pm.test(\"status é 200\", () => pm.response.to.have.status(200));",
+         "// \"Café\" e \"CAFÉ\": a busca ignora a CAIXA...",
+         "pm.test(\"encontra Café e CAFÉ\", () => pm.expect(r.quantidade).to.eql(2));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos?nome=Café {{sufixo}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ],
+       "query": [
+        {
+         "key": "nome",
+         "value": "Café {{sufixo}}"
+        }
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "2. Sem acento encontra só 1 (o bug que o cliente sente)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const r = pm.response.json();",
+         "// ...mas NÃO ignora o ACENTO: quem digita \"cafe\" não acha \"Café\".",
+         "pm.test(\"quem digita sem acento perde os dois acentuados\", () =>",
+         "  pm.expect(r.quantidade).to.eql(1));",
+         "pm.test(\"e o que sobra é justamente o sem acento\", () =>",
+         "  pm.expect(r.produtos[0].nome).to.include(\"cafe\"));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos?nome=cafe {{sufixo}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ],
+       "query": [
+        {
+         "key": "nome",
+         "value": "cafe {{sufixo}}"
+        }
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "3. O filtro é parcial (contém), não exato",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const r = pm.response.json();",
+         "pm.test(\"'Caf' traz pelo menos os quatro do lote\", () =>",
+         "  pm.expect(r.quantidade).to.be.at.least(4));",
+         "pm.test(\"inclusive a Cafeteira, que ninguém pediu\", () =>",
+         "  pm.expect(r.produtos.map(p => p.nome).join(\" \")).to.include(\"Cafeteira\"));",
+         "",
+         "// E o 'contém' vale em qualquer posição: o sufixo fica no FIM do nome.",
+         "pm.sendRequest(pm.environment.get(\"baseUrl\") + \"/produtos?nome=\" + pm.collectionVariables.get(\"sufixo\"),",
+         "  (e, resp) => {",
+         "    pm.test(\"buscar pelo fim do nome também traz os quatro\", () =>",
+         "      pm.expect(resp.json().quantidade).to.eql(4));",
+         "  });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos?nome=Caf",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ],
+       "query": [
+        {
+         "key": "nome",
+         "value": "Caf"
+        }
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "4. Filtro vazio NÃO filtra — devolve a base inteira",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const r = pm.response.json();",
+         "pm.test(\"status é 200\", () => pm.response.to.have.status(200));",
+         "pm.test(\"veio muito mais do que os 4 do lote\", () =>",
+         "  pm.expect(r.quantidade).to.be.above(4));",
+         "// Numa busca por documento ou por conta, isto é vazamento de base inteira.",
+         "pm.collectionVariables.set(\"totalBase\", r.quantidade);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos?nome=",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ],
+       "query": [
+        {
+         "key": "nome",
+         "value": ""
+        }
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "5. Parâmetro desconhecido é recusado (esta API é estrita)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test(\"400 para parâmetro que não existe\", () => pm.response.to.have.status(400));",
+         "pm.test(\"e diz qual foi\", () =>",
+         "  pm.expect(pm.response.json()).to.have.property(\"_limit\"));",
+         "// Outras APIs IGNORAM em silêncio: aí o seu ?_limit=10 não limita nada,",
+         "// e o teste passa achando que testou paginação."
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos?_limit=2",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "2"
+        }
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "6. Não existe paginação: tudo vem de uma vez",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const r = pm.response.json();",
+         "pm.test(\"a resposta não traz página, total nem links\", () => {",
+         "  [\"pagina\", \"page\", \"total\", \"links\", \"next\"].forEach(k =>",
+         "    pm.expect(r).to.not.have.property(k));",
+         "});",
+         "pm.test(\"o array traz TODOS os itens informados\", () =>",
+         "  pm.expect(r.produtos.length).to.eql(r.quantidade));",
+         "",
+         "console.log(`itens: ${r.quantidade} | tamanho: ${pm.response.responseSize} bytes | tempo: ${pm.response.responseTime} ms`);",
+         "pm.test(\"tempo de resposta aceitável\", () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "7. A ordem é estável, mas não é a de criação",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const primeira = pm.response.json().produtos.map(p => p._id);",
+         "",
+         "pm.sendRequest(pm.environment.get(\"baseUrl\") + \"/produtos\", (e, r) => {",
+         "  const segunda = r.json().produtos.map(p => p._id);",
+         "  pm.test(\"duas leituras seguidas devolvem a mesma ordem\", () =>",
+         "    pm.expect(segunda).to.eql(primeira));",
+         "});",
+         "",
+         "// Mas a ordem não é a de criação, e ela muda quando a base muda.",
+         "// Sem ordenação explícita, paginar é sortear.",
+         "pm.test(\"a API não promete ordem nenhuma\", () =>",
+         "  pm.expect(pm.response.json()).to.not.have.property(\"ordenadoPor\"));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "8. Limpeza",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const base = pm.environment.get(\"baseUrl\");",
+         "const admin = { Authorization: \"Bearer \" + pm.environment.get(\"token\") };",
+         "const doLote = pm.response.json().produtos;",
+         "",
+         "pm.test(\"o lote da aula está lá para ser apagado\", () =>",
+         "  pm.expect(doLote.length).to.eql(4));",
+         "",
+         "doLote.forEach(p => pm.sendRequest({ url: base + \"/produtos/\" + p._id, method: \"DELETE\", header: admin }, () => {}));",
+         "",
+         "[\"sufixo\", \"totalBase\", \"id_Caf\", \"id_cafe\", \"id_CAF\", \"id_Cafeteira\"]",
+         "  .forEach(v => pm.collectionVariables.unset(v));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/produtos?nome={{sufixo}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "produtos"
+       ],
+       "query": [
+        {
+         "key": "nome",
+         "value": "{{sufixo}}"
+        }
+       ]
+      }
+     },
+     "response": []
+    }
+   ]
   }
  ],
  "auth": {
